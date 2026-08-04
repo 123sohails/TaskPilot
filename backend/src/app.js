@@ -6,12 +6,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-
-app.get("/", (req,res)=>{
-    res.json({
-        message:"TaskPilot API running"
-    });
+// Health Check
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "TaskPilot Backend is running 🚀"
+  });
 });
-
 
 module.exports = app;
