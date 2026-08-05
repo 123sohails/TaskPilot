@@ -1,26 +1,9 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const {
-  triggerWorkflow,
-  getExecutionStatus,
-  getDeadLetterJobs,
-  retryDeadLetterJob,
-  getQueueStats,
-} = require("../controllers/workflow.controller");
-
-// Trigger a workflow execution
-router.post("/trigger", triggerWorkflow);
-
-// Get execution status by job ID
-router.get("/status/:jobId", getExecutionStatus);
-
-// Get dead-letter queue jobs
-router.get("/dead-letter", getDeadLetterJobs);
-
-// Retry a dead-letter job
-router.post("/dead-letter/:jobId/retry", retryDeadLetterJob);
-
-// Get queue statistics
-router.get("/stats", getQueueStats);
-
+const workflowcontroller = require("../controllers/workflow.controller");
+router.post('/create', workflowcontroller.createWorkflow);
+router.get("/", workflowcontroller.getWorkflows);
+router.get("/:id", workflowController.getWorkflow);
+router.put("/:id", workflowController.updateWorkflow);
+router.delete("/:id", workflowController.deleteWorkflow);
 module.exports = router;
