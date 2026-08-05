@@ -13,18 +13,12 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "@notionhq/client": "^5.23.3",
-    "@octokit/rest": "^22.0.1",
-    "@supabase/supabase-js": "^2.112.0",
     "axios": "^1.19.0",
-    "bcrypt": "^6.0.0",
-    "bullmq": "^6.0.7",
+    "bullmq": "^6.0.8",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "googleapis": "^174.0.0",
-    "ioredis": "^6.0.0",
-    "jsonwebtoken": "^9.0.3"
+    "ioredis": "^6.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
