@@ -1,12 +1,24 @@
+const crypto = require("crypto");
 const supabase = require("../config/supabase");
+const { workflowQueue } = require("../queues/task.queue");
+
+function buildIdempotencyKey(workflowId, triggerData = {}) {
+  const normalizedPayload = {
+    workflowId,
+    triggerData: triggerData && typeof triggerData === "object"
+      ? triggerData
+      : { value: triggerData },
+  };
+
+  const serialized = JSON.stringify(normalizedPayload, Object.keys(normalizedPayload).sort());
+  return `taskpilot:${crypto.createHash("sha256").update(serialized).digest("hex")}`;
+}
 
 /**
- * Create a new execution record
- * Note: Queue integration will be handled by Saleem's worker service
+ * Create a new execution record and queue it for processing
  */
 async function runWorkflow(workflowId, userId, triggerData = {}) {
   try {
-    // Fetch workflow with steps
     const { data: workflow, error: workflowError } = await supabase
       .from("workflows")
       .select(
@@ -27,12 +39,12 @@ async function runWorkflow(workflowId, userId, triggerData = {}) {
       throw new Error("Workflow not found");
     }
 
-    // Sort steps by order
-    const sortedSteps = workflow.workflow_steps.sort(
+    const sortedSteps = [...(workflow.workflow_steps || [])].sort(
       (a, b) => a.step_order - b.step_order
     );
 
-    // Create execution record
+    const idempotencyKey = buildIdempotencyKey(workflowId, triggerData);
+
     const { data: execution, error: executionError } = await supabase
       .from("executions")
       .insert({
@@ -42,6 +54,7 @@ async function runWorkflow(workflowId, userId, triggerData = {}) {
         logs: JSON.stringify({
           message: "Execution created",
           triggerData,
+          idempotencyKey,
         }),
       })
       .select()
@@ -51,11 +64,46 @@ async function runWorkflow(workflowId, userId, triggerData = {}) {
       throw new Error(`Failed to create execution: ${executionError.message}`);
     }
 
-    // Return execution data for queue integration
+    const job = await workflowQueue.add(
+      "workflow-execution",
+      {
+        workflowId,
+        triggerEvent: triggerData,
+        idempotencyKey,
+        steps: sortedSteps,
+        executionId: execution.id,
+        userId,
+      },
+      {
+        jobId: `${workflowId}:${execution.id}`,
+      }
+    );
+
+    const { data: queuedExecution, error: queueUpdateError } = await supabase
+      .from("executions")
+      .update({
+        status: "queued",
+        logs: JSON.stringify({
+          message: "Workflow queued for execution",
+          triggerData,
+          idempotencyKey,
+          queueJobId: job.id,
+        }),
+      })
+      .eq("id", execution.id)
+      .select()
+      .single();
+
+    if (queueUpdateError) {
+      console.warn("Unable to update execution queue state:", queueUpdateError.message);
+    }
+
     return {
-      execution,
+      execution: queuedExecution || execution,
       workflow,
       steps: sortedSteps,
+      jobId: job.id,
+      idempotencyKey,
     };
   } catch (error) {
     throw new Error(`Failed to run workflow: ${error.message}`);
@@ -127,8 +175,8 @@ async function updateExecution(executionId, status, logs) {
       .from("executions")
       .update({
         status,
-        logs: JSON.stringify(logs),
-        finished_at: status === "completed" || status === "failed" ? new Date().toISOString() : null,
+        logs: typeof logs === "string" ? logs : JSON.stringify(logs),
+        finished_at: status === "completed" || status === "failed" || status === "skipped" ? new Date().toISOString() : null,
       })
       .eq("id", executionId)
       .select()
@@ -149,4 +197,5 @@ module.exports = {
   getExecutions,
   getExecutionById,
   updateExecution,
+  buildIdempotencyKey,
 };

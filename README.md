@@ -43,3 +43,29 @@ No drag-and-drop UI, no OAuth logins, no integration marketplace, no multi-tenan
 ## Status
 
 In development.
+## deployment
+## Backend Deployment
+
+- Render
+- Root Directory: backend
+- Build Command: npm install
+- Start Command: npm start
+
+## Worker Deployment
+
+- Render
+- Root Directory: backend
+- Build Command: npm install
+- Start Command: node src/workers/task.worker.js
+
+## Database
+
+Supabase
+
+## Redis
+
+Upstash Redis
+
+## Frontend
+
+Vercel

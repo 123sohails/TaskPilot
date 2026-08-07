@@ -3,6 +3,10 @@ const executionService = require("../services/execution.service");
 // Temporary user ID (replace with real Auth user later)
 const TEMP_USER_ID = "PASTE_REAL_SUPABASE_AUTH_USER_UUID_HERE";
 
+function getUserId(req) {
+  return req.user?.id || TEMP_USER_ID;
+}
+
 /**
  * Run a workflow execution
  */
@@ -13,7 +17,7 @@ async function runWorkflow(req, res) {
 
     const execution = await executionService.runWorkflow(
       workflowId,
-      TEMP_USER_ID,
+      getUserId(req),
       triggerData
     );
 
@@ -30,7 +34,7 @@ async function runWorkflow(req, res) {
  */
 async function getExecutions(req, res) {
   try {
-    const executions = await executionService.getExecutions(TEMP_USER_ID);
+    const executions = await executionService.getExecutions(getUserId(req));
 
     res.json(executions);
   } catch (error) {

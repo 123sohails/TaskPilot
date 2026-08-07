@@ -4,6 +4,7 @@ const cors = require("cors");
 const workflowRoutes = require("./routes/workflow.routes");
 const workflowStepRoutes = require("./routes/workflowStep.routes");
 const executionRoutes = require("./routes/execution.routes");
+const metricsRoutes = require("./routes/metrics.routes");
 const { errorHandler, notFoundHandler } = require("./middleware/error.middleware");
 
 const app = express();
@@ -21,6 +22,8 @@ app.get("/", (req, res) => {
 app.use("/api/workflows", workflowRoutes);
 app.use("/api/workflows", workflowStepRoutes);
 app.use("/api/executions", executionRoutes);
+app.use("/metrics", metricsRoutes);
+app.use("/api/metrics", metricsRoutes);
 
 // 404 handler
 app.use(notFoundHandler);

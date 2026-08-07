@@ -1,18 +1,43 @@
 const { Worker } = require("bullmq");
 const { redisConnection, deadLetterQueue } = require("../queues/task.queue");
 const idempotencyService = require("../services/idempotency.service");
+const executionService = require("../services/execution.service");
 
 const workflowWorker = new Worker(
   "workflows",
   async (job) => {
-    const { workflowId, triggerEvent, idempotencyKey, steps } = job.data;
+    const { workflowId, triggerEvent, idempotencyKey, steps, executionId } = job.data;
     
     job.log(`Starting workflow execution: ${workflowId}`);
     const startTime = Date.now();
+
+    try {
+      if (executionId) {
+        await executionService.updateExecution(executionId, "running", {
+          message: "Workflow execution started",
+          triggerEvent,
+          attempt: job.attemptsMade + 1,
+        });
+      }
+    } catch (error) {
+      console.warn(`Unable to update execution ${executionId} to running:`, error.message);
+    }
     
     // Check idempotency - only skip if this is NOT a retry
     if (idempotencyKey && job.attemptsMade === 0 && await idempotencyService.isProcessed(idempotencyKey)) {
       job.log(`Duplicate event detected: ${idempotencyKey}`);
+
+      try {
+        if (executionId) {
+          await executionService.updateExecution(executionId, "skipped", {
+            message: "Duplicate event detected",
+            reason: "duplicate_event",
+          });
+        }
+      } catch (error) {
+        console.warn(`Unable to update execution ${executionId} to skipped:`, error.message);
+      }
+
       return { status: "skipped", reason: "duplicate_event" };
     }
     
@@ -50,6 +75,19 @@ const workflowWorker = new Worker(
     
     const duration = Date.now() - startTime;
     job.log(`Workflow completed in ${duration}ms`);
+
+    try {
+      if (executionId) {
+        await executionService.updateExecution(executionId, "completed", {
+          message: "Workflow execution completed",
+          duration,
+          attemptsMade: job.attemptsMade,
+          steps: results,
+        });
+      }
+    } catch (error) {
+      console.warn(`Unable to update execution ${executionId} to completed:`, error.message);
+    }
     
     return {
       status: "completed",
@@ -72,6 +110,18 @@ workflowWorker.on("failed", async (job, error) => {
   if (job.attemptsMade >= (job.opts.attempts || 3)) {
     console.log(`Moving job ${job.id} to dead-letter queue after ${job.attemptsMade} attempts`);
     
+    try {
+      if (job.data.executionId) {
+        await executionService.updateExecution(job.data.executionId, "failed", {
+          message: "Workflow execution failed after retries",
+          error: error.message,
+          attemptsMade: job.attemptsMade,
+        });
+      }
+    } catch (updateError) {
+      console.warn(`Unable to update execution ${job.data.executionId} to failed:`, updateError.message);
+    }
+
     try {
       await deadLetterQueue.add("failed-workflow", {
         originalJobId: job.id,
