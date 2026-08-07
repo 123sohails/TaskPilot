@@ -1,7 +1,11 @@
 const workflowStepService = require("../services/workflowStep.service");
 
-// Temporary user ID (replace with real Auth user later)
-const TEMP_USER_ID = "PASTE_REAL_SUPABASE_AUTH_USER_UUID_HERE";
+function getUserId(req) {
+  if (!req.user || !req.user.id) {
+    throw new Error("User not authenticated");
+  }
+  return req.user.id;
+}
 
 /**
  * Add a step to a workflow
