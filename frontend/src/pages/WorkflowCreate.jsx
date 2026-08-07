@@ -11,6 +11,7 @@ const WorkflowCreate = () => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
@@ -37,10 +38,12 @@ const WorkflowCreate = () => {
     setLoading(true);
     try {
       await workflowAPI.create(formData);
-      navigate("/workflows");
+      setSuccess(true);
+      setTimeout(() => {
+        navigate("/workflows");
+      }, 1500);
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to create workflow");
-    } finally {
       setLoading(false);
     }
   };
@@ -160,11 +163,11 @@ const WorkflowCreate = () => {
           <div style={{ display: 'flex', gap: '16px', marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || success}
               className="btn-primary"
-              style={{ padding: '12px 24px', fontSize: '16px' }}
+              style={{ padding: '12px 24px', fontSize: '16px', background: success ? 'var(--status-success)' : undefined }}
             >
-              {loading ? "Creating..." : "Create Workflow"}
+              {loading ? "Creating..." : success ? "✅ Created!" : "Create Workflow"}
             </button>
             <button
               type="button"

@@ -124,7 +124,7 @@ async function getExecutions(userId) {
       `
       )
       .eq("workflows.user_id", userId)
-      .order("created_at", { ascending: false });
+      .order("started_at", { ascending: false });
 
     if (error) {
       throw new Error(`Failed to fetch executions: ${error.message}`);
