@@ -20,7 +20,7 @@ const TaskCard = ({ workflow, onRun, onDelete }) => {
       gmail_received: "bg-red-100 text-red-700",
       notion_updated: "bg-gray-100 text-gray-700",
     };
-    return colors[triggerType] ||bg-gray-100 text-gray-700;
+    return colors[triggerType] || "bg-gray-100 text-gray-700";
   };
 
   return (
