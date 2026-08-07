@@ -1,12 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { onAuthStateChange } from "./services/supabase";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import Tasks from "./pages/Tasks";
 import WorkflowCreate from "./pages/WorkflowCreate";
 import ExecutionLogs from "./pages/ExecutionLogs";
+import Integrations from "./pages/Integrations";
+import Templates from "./pages/Templates";
 import "./App.css";
 
 function App() {
@@ -40,35 +43,45 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route
-          path="/login"
-          element={!user ? <Login /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/signup"
-          element={!user ? <Signup /> : <Navigate to="/" />}
-        />
-        <Route
-          path="/"
-          element={user ? <Dashboard /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/workflows/create"
-          element={user ? <WorkflowCreate /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/tasks"
-          element={user ? <Tasks /> : <Navigate to="/login" />}
-        />
-        <Route
-          path="/executions/:id"
-          element={user ? <ExecutionLogs /> : <Navigate to="/login" />}
-        />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <Routes>
+          <Route
+            path="/login"
+            element={!user ? <Login /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/signup"
+            element={!user ? <Signup /> : <Navigate to="/" />}
+          />
+          <Route
+            path="/"
+            element={user ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/workflows/create"
+            element={user ? <WorkflowCreate /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/tasks"
+            element={user ? <Tasks /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/executions/:id"
+            element={user ? <ExecutionLogs /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/integrations"
+            element={user ? <Integrations /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/templates"
+            element={user ? <Templates /> : <Navigate to="/login" />}
+          />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
