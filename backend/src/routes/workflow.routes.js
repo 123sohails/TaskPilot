@@ -2,6 +2,10 @@ const express = require("express");
 const router = express.Router();
 
 const workflowController = require("../controllers/workflow.controller");
+const { authenticateUser } = require("../middleware/auth.middleware");
+
+// All workflow routes require authentication
+router.use(authenticateUser);
 
 router.post("/create", workflowController.createWorkflow);
 router.get("/", workflowController.getWorkflows);

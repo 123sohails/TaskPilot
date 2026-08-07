@@ -1,14 +1,14 @@
 const workflowService = require("../services/workflow.service");
 
-// Temporary user ID (replace with real Auth user later)
-const TEMP_USER_ID = "PASTE_REAL_SUPABASE_AUTH_USER_UUID_HERE";
-
 /**
  * Create a new workflow
  */
 async function createWorkflow(req, res) {
   try {
-    const userId = req.user?.id || TEMP_USER_ID;
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
     const workflow = await workflowService.createWorkflow(userId, req.body);
 
     res.status(201).json(workflow);
@@ -24,7 +24,10 @@ async function createWorkflow(req, res) {
  */
 async function getWorkflows(req, res) {
   try {
-    const userId = req.user?.id || TEMP_USER_ID;
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
     const workflows = await workflowService.getWorkflows(userId);
 
     res.json(workflows);
