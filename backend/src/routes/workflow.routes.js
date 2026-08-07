@@ -7,7 +7,7 @@ const { authenticateUser } = require("../middleware/auth.middleware");
 // All workflow routes require authentication
 router.use(authenticateUser);
 
-router.post("/create", workflowController.createWorkflow);
+router.post("/", workflowController.createWorkflow);
 router.get("/", workflowController.getWorkflows);
 router.get("/:id", workflowController.getWorkflow);
 router.put("/:id", workflowController.updateWorkflow);
