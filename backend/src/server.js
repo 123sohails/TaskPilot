@@ -1,6 +1,8 @@
 require("dotenv").config();
+require("./workers/task.worker");
 
 const app = require("./app");
+
 
 const PORT = process.env.PORT || 5000;
 
