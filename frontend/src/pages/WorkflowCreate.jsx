@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { workflowAPI } from "../services/api";
-import Sidebar from "../components/Sidebar";
 import WorkflowBuilder from "../components/WorkflowBuilder";
 
 const WorkflowCreate = () => {
@@ -17,46 +16,28 @@ const WorkflowCreate = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    if (!formData.name.trim()) {
-      newErrors.name = "Workflow name is required";
-    } else if (formData.name.length < 3) {
-      newErrors.name = "Workflow name must be at least 3 characters";
-    } else if (formData.name.length > 100) {
-      newErrors.name = "Workflow name must be less than 100 characters";
-    }
-    
-    if (formData.description && formData.description.length > 500) {
-      newErrors.description = "Description must be less than 500 characters";
-    }
+    if (!formData.name.trim()) newErrors.name = "Workflow name is required";
+    else if (formData.name.length < 3) newErrors.name = "Workflow name must be at least 3 characters";
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-    if (errors[e.target.name]) {
-      setErrors({ ...errors, [e.target.name]: "" });
-    }
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    if (errors[e.target.name]) setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     setLoading(true);
-
     try {
-      const response = await workflowAPI.create(formData);
-      navigate("/");
+      await workflowAPI.create(formData);
+      navigate("/workflows");
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to create workflow");
     } finally {
@@ -73,158 +54,128 @@ const WorkflowCreate = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0B1120]">
-      <Sidebar />
-      <div className="ml-64 max-w-4xl mx-auto px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Create Workflow</h1>
-          <p className="text-gray-400">Design a new automation workflow to streamline your tasks</p>
+    <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1000px', margin: '0 auto', width: '100%' }}>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Create Workflow</h1>
+          <p className="page-subtitle">Design a new automation workflow to streamline your tasks</p>
         </div>
+      </div>
 
-        {error && (
-          <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg mb-6 flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            {error}
+      {error && (
+        <div className="badge badge-error" style={{ padding: '12px', fontSize: '14px' }}>
+          {error}
+        </div>
+      )}
+
+      <div className="card">
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
+          <div className="flex-col gap-2">
+            <label htmlFor="name" style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              Workflow Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              className="input-field"
+              placeholder="e.g., GitHub Issue to Notion"
+            />
+            {errors.name && <span style={{ color: 'var(--status-error)', fontSize: '12px' }}>{errors.name}</span>}
           </div>
-        )}
 
-        <div className="bg-[#111827] rounded-2xl shadow-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div>
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-400 mb-2"
-              >
-                Workflow Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
-                  errors.name
-                    ? "border-red-700 focus:ring-red-500 bg-[#0B1120] text-white"
-                    : "border-gray-700 focus:ring-[#6366F1] bg-[#0B1120] text-white"
-                }`}
-                placeholder="e.g., GitHub Issue to Notion"
-              />
-              {errors.name && (
-                <p className="mt-1.5 text-sm text-red-400">{errors.name}</p>
-              )}
+          <div className="flex-col gap-2">
+            <label htmlFor="description" style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="input-field"
+              style={{ resize: 'vertical' }}
+              placeholder="Describe what this workflow does and what it automates"
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+              {errors.description ? (
+                <span style={{ color: 'var(--status-error)' }}>{errors.description}</span>
+              ) : <span></span>}
+              <span style={{ color: 'var(--text-tertiary)' }}>{formData.description.length}/500</span>
             </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="description"
-                className="block text-sm font-medium text-gray-400 mb-2"
-              >
-                Description
-              </label>
-              <textarea
-                id="description"
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={4}
-                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none ${
-                  errors.description
-                    ? "border-red-700 focus:ring-red-500 bg-[#0B1120] text-white"
-                    : "border-gray-700 focus:ring-[#6366F1] bg-[#0B1120] text-white"
-                }`}
-                placeholder="Describe what this workflow does and what it automates"
-              />
-              {errors.description && (
-                <p className="mt-1.5 text-sm text-red-400">{errors.description}</p>
-              )}
-              <p className="mt-1 text-sm text-gray-500">{formData.description.length}/500 characters</p>
+          <div className="flex-col gap-4">
+            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              Trigger Type
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+              {triggerOptions.map((option) => (
+                <label
+                  key={option.value}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '16px',
+                    padding: '16px',
+                    borderRadius: 'var(--border-radius-md)',
+                    border: formData.trigger_type === option.value ? '2px solid var(--accent-primary)' : '2px solid var(--border-color)',
+                    background: formData.trigger_type === option.value ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.02)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    position: 'relative'
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="trigger_type"
+                    value={option.value}
+                    checked={formData.trigger_type === option.value}
+                    onChange={handleChange}
+                    style={{ display: 'none' }}
+                  />
+                  <div style={{ fontSize: '24px' }}>{option.icon}</div>
+                  <div>
+                    <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{option.label}</h3>
+                    <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{option.description}</p>
+                  </div>
+                  {formData.trigger_type === option.value && (
+                    <div style={{ position: 'absolute', top: '16px', right: '16px', color: 'var(--accent-primary)' }}>✅</div>
+                  )}
+                </label>
+              ))}
             </div>
+          </div>
 
-            <div>
-              <label
-                htmlFor="trigger_type"
-                className="block text-sm font-medium text-gray-400 mb-4"
-              >
-                Trigger Type
-              </label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {triggerOptions.map((option) => (
-                  <label
-                    key={option.value}
-                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                      formData.trigger_type === option.value
-                        ? "border-[#6366F1] bg-[#6366F1]/10"
-                        : "border-gray-800 hover:border-gray-700 bg-[#0B1120]"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name="trigger_type"
-                      value={option.value}
-                      checked={formData.trigger_type === option.value}
-                      onChange={handleChange}
-                      className="sr-only"
-                    />
-                    <div className="flex items-start">
-                      <span className="text-2xl mr-3">{option.icon}</span>
-                      <div>
-                        <h3 className="font-semibold text-white">{option.label}</h3>
-                        <p className="text-sm text-gray-400 mt-1">{option.description}</p>
-                      </div>
-                    </div>
-                    {formData.trigger_type === option.value && (
-                      <div className="absolute top-4 right-4">
-                        <svg className="w-5 h-5 text-[#6366F1]" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                    )}
-                  </label>
-                ))}
-              </div>
-            </div>
+          <div className="flex-col gap-4">
+            <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+              Workflow Builder
+            </label>
+            <WorkflowBuilder />
+          </div>
 
-            <div>
-              <label
-                htmlFor="workflow_builder"
-                className="block text-sm font-medium text-gray-400 mb-4"
-              >
-                Workflow Builder
-              </label>
-              <WorkflowBuilder />
-            </div>
-
-            <div className="flex space-x-4 pt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-8 py-3 bg-[#6366F1] hover:bg-[#5558E3] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center gap-2"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating Workflow...
-                  </span>
-                ) : (
-                  "Create Workflow"
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/")}
-                className="px-6 py-3 border border-gray-700 rounded-xl text-gray-400 font-medium hover:bg-gray-800 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
+          <div style={{ display: 'flex', gap: '16px', marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn-primary"
+              style={{ padding: '12px 24px', fontSize: '16px' }}
+            >
+              {loading ? "Creating..." : "Create Workflow"}
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/workflows")}
+              className="btn-secondary"
+              style={{ padding: '12px 24px', fontSize: '16px' }}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

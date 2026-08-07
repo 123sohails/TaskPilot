@@ -1,9 +1,8 @@
-import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { signOut } from "../services/supabase";
 
-const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+const Sidebar = ({ isCollapsed, setIsCollapsed }) => {
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
 
@@ -19,94 +18,79 @@ const Sidebar = () => {
     { path: "/tasks", label: "Executions", icon: "⚡" },
     { path: "/integrations", label: "Integrations", icon: "🔗" },
     { path: "/templates", label: "Templates", icon: "📋" },
-    { path: "/settings", label: "Settings", icon: "⚙️" },
   ];
 
   const isActive = (path) => location.pathname === path;
 
+  // Safe parse user info
+  let userEmail = "user@example.com";
+  let userInitial = "U";
+  try {
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      if (user && user.email) {
+        userEmail = user.email;
+        userInitial = user.email.charAt(0).toUpperCase();
+      }
+    }
+  } catch (e) {
+    // Ignore parse error
+  }
+
+  const userName = userEmail.split("@")[0];
+
   return (
-    <div className={`fixed left-0 top-0 h-full bg-[#111827] text-white transition-all duration-300 z-50 ${
-      isCollapsed ? "w-16" : "w-64"
-    }`}>
-      <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          {!isCollapsed && (
-            <Link to="/" className="text-xl font-bold text-[#6366F1]">
-              TaskPilot 🚀
-            </Link>
-          )}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center p-3 rounded-lg transition-colors ${
-                isActive(item.path)
-                  ? "bg-[#6366F1] text-white"
-                  : "hover:bg-gray-800 text-gray-300"
-              }`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              {!isCollapsed && (
-                <span className="ml-3 font-medium">{item.label}</span>
-              )}
-            </Link>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-800 space-y-2">
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-[#0B1120] border border-gray-800">
-            <div className="w-10 h-10 rounded-full bg-[#6366F1] flex items-center justify-center text-white font-semibold">
-              {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email?.charAt(0).toUpperCase() : "U"}
-            </div>
-            {!isCollapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email?.split("@")[0] : "User"}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email : "user@example.com"}
-                </p>
-              </div>
-            )}
-          </div>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800 transition-colors text-gray-300"
-          >
-            {isDark ? (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            )}
-            {!isCollapsed && <span className="ml-3 font-medium">{isDark ? "Light Mode" : "Dark Mode"}</span>}
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center w-full p-3 rounded-lg hover:bg-red-600/20 hover:text-red-400 transition-colors text-gray-300"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-            </svg>
-            {!isCollapsed && <span className="ml-3 font-medium">Logout</span>}
-          </button>
-        </div>
+    <aside className={`sidebar ${isCollapsed ? "collapsed" : ""}`}>
+      <div className="sidebar-header">
+        {!isCollapsed && (
+          <Link to="/" className="sidebar-logo">
+            <span>🚀 TaskPilot</span>
+          </Link>
+        )}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="sidebar-toggle"
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          {isCollapsed ? "→" : "←"}
+        </button>
       </div>
-    </div>
+
+      <nav className="sidebar-nav">
+        {menuItems.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`nav-item ${isActive(item.path) ? "active" : ""}`}
+            title={isCollapsed ? item.label : ""}
+          >
+            <span className="nav-icon">{item.icon}</span>
+            <span className="nav-label">{item.label}</span>
+          </Link>
+        ))}
+      </nav>
+
+      <div className="sidebar-footer">
+        <div className="user-profile">
+          <div className="user-avatar">{userInitial}</div>
+          <div className="user-info">
+            <span className="user-name">{userName}</span>
+            <span className="user-email">{userEmail}</span>
+          </div>
+        </div>
+
+        <button onClick={toggleTheme} className="sidebar-action" title="Toggle Theme">
+          <span className="nav-icon">{isDark ? "☀️" : "🌙"}</span>
+          <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+        </button>
+
+        <button onClick={handleLogout} className="sidebar-action danger" title="Logout">
+          <span className="nav-icon">🚪</span>
+          <span>Logout</span>
+        </button>
+      </div>
+    </aside>
   );
 };
 

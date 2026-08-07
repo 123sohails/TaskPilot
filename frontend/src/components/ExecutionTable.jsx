@@ -2,55 +2,43 @@ import StatusBadge from "./StatusBadge";
 
 const ExecutionTable = ({ executions, onViewDetails }) => {
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-[#111827] rounded-lg shadow-sm border border-gray-800">
-        <thead className="bg-gray-800/50">
+    <div className="table-container card" style={{ padding: 0, overflow: 'hidden' }}>
+      <table>
+        <thead>
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              ID
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Workflow
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Status
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Started
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Finished
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-              Actions
-            </th>
+            <th>ID</th>
+            <th>Workflow</th>
+            <th>Status</th>
+            <th>Started</th>
+            <th>Finished</th>
+            <th>Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-800">
+        <tbody>
           {executions && executions.length > 0 ? (
             executions.map((execution) => (
-              <tr key={execution.id} className="hover:bg-gray-800/50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-mono">
+              <tr key={execution.id}>
+                <td style={{ fontFamily: 'monospace' }}>
                   {execution.id.slice(0, 8)}...
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                <td style={{ fontWeight: 500, color: 'var(--text-primary)' }}>
                   {execution.workflows?.name || "Unknown"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td>
                   <StatusBadge status={execution.status} />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                <td>
                   {new Date(execution.started_at).toLocaleString()}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                <td>
                   {execution.finished_at
                     ? new Date(execution.finished_at).toLocaleString()
                     : "-"}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                <td>
                   <button
                     onClick={() => onViewDetails(execution.id)}
-                    className="text-[#6366F1] hover:text-[#5558E3] font-medium transition-colors"
+                    style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', cursor: 'pointer', fontWeight: 500 }}
                   >
                     View Details
                   </button>
@@ -59,10 +47,7 @@ const ExecutionTable = ({ executions, onViewDetails }) => {
             ))
           ) : (
             <tr>
-              <td
-                colSpan={6}
-                className="px-6 py-12 text-center text-sm text-gray-500"
-              >
+              <td colSpan={6} style={{ textAlign: 'center', padding: '48px', color: 'var(--text-tertiary)' }}>
                 No executions found
               </td>
             </tr>

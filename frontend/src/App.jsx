@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { useEffect, useState } from "react";
 import { onAuthStateChange } from "./services/supabase";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -40,8 +41,13 @@ function App() {
   }, []);
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="auth-container">Loading...</div>;
   }
+
+  // Helper for authenticated routes wrapped in Layout
+  const ProtectedRoute = ({ element }) => {
+    return user ? <Layout>{element}</Layout> : <Navigate to="/login" />;
+  };
 
   return (
     <ThemeProvider>
@@ -57,31 +63,31 @@ function App() {
           />
           <Route
             path="/"
-            element={user ? <Dashboard /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<Dashboard />} />}
           />
           <Route
             path="/workflows"
-            element={user ? <Workflows /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<Workflows />} />}
           />
           <Route
             path="/workflows/create"
-            element={user ? <WorkflowCreate /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<WorkflowCreate />} />}
           />
           <Route
             path="/tasks"
-            element={user ? <Tasks /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<Tasks />} />}
           />
           <Route
             path="/executions/:id"
-            element={user ? <ExecutionLogs /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<ExecutionLogs />} />}
           />
           <Route
             path="/integrations"
-            element={user ? <Integrations /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<Integrations />} />}
           />
           <Route
             path="/templates"
-            element={user ? <Templates /> : <Navigate to="/login" />}
+            element={<ProtectedRoute element={<Templates />} />}
           />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
