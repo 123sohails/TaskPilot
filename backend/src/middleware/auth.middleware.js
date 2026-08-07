@@ -1,9 +1,4 @@
-const { createClient } = require("@supabase/supabase-js");
-
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SECRET_KEY
-);
+const supabase = require("../config/supabase");
 
 /**
  * Verify Supabase JWT token and attach user to request
