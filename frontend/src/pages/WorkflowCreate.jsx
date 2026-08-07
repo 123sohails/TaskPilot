@@ -38,6 +38,7 @@ const WorkflowCreate = () => {
     setLoading(true);
     try {
       await workflowAPI.create(formData);
+      setLoading(false);
       setSuccess(true);
       setTimeout(() => {
         navigate("/workflows");
