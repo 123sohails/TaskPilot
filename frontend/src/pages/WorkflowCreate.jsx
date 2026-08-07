@@ -76,11 +76,10 @@ const WorkflowCreate = () => {
     <div className="min-h-screen bg-[#0B1120]">
       <Sidebar />
       <div className="ml-64 max-w-4xl mx-auto px-8 py-8">
-        <div className="bg-[#111827] rounded-xl shadow-sm border border-gray-800 p-8">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-white mb-2">Create Workflow</h1>
-            <p className="text-gray-400">Design a new automation workflow to streamline your tasks</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">Create Workflow</h1>
+          <p className="text-gray-400">Design a new automation workflow to streamline your tasks</p>
+        </div>
 
         {error && (
           <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg mb-6 flex items-center">
