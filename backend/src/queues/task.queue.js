@@ -15,13 +15,18 @@ if (process.env.NODE_ENV === 'test') {
   workflowQueue = { add: async () => ({ id: 'mock-job-123' }) };
   deadLetterQueue = { add: async () => ({ id: 'mock-dlq-123' }) };
 } else {
+  const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
+  const isTls = redisUrl.startsWith("rediss://");
+  
   // Redis Connection
-  redisConnection = new Redis(
-    process.env.REDIS_URL || "redis://localhost:6379",
-    {
-      maxRetriesPerRequest: null,
-    }
-  );
+  redisConnection = new Redis(redisUrl, {
+    maxRetriesPerRequest: null,
+    ...(isTls && {
+      tls: {
+        rejectUnauthorized: false, // Required for many managed Redis providers like Upstash
+      },
+    }),
+  });
 
   // Main Workflow Queue
   workflowQueue = new Queue("workflows", {

@@ -75,7 +75,7 @@ async function runWorkflow(workflowId, userId, triggerData = {}) {
         userId,
       },
       {
-        jobId: `${workflowId}:${execution.id}`,
+        jobId: `${workflowId}-${execution.id}`,
       }
     );
 
