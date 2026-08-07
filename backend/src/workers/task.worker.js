@@ -3,15 +3,14 @@ const { redisConnection, deadLetterQueue } = require("../queues/task.queue");
 const idempotencyService = require("../services/idempotency.service");
 const executionService = require("../services/execution.service");
 
-const workflowWorker = new Worker(
-  "workflows",
-  async (job) => {
+const workflowWorkerProcessor = async (job) => {
     const { workflowId, triggerEvent, idempotencyKey, steps, executionId } = job.data;
     
     job.log(`Starting workflow execution: ${workflowId}`);
     const startTime = Date.now();
 
     try {
+
       if (executionId) {
         await executionService.updateExecution(executionId, "running", {
           message: "Workflow execution started",
@@ -45,13 +44,14 @@ const workflowWorker = new Worker(
     const results = [];
     for (let i = 0; i < steps.length; i++) {
       const step = steps[i];
-      job.log(`Executing step ${i + 1}/${steps.length}: ${step.type}`);
+      const stepType = step.step_type || step.type;
+      job.log(`Executing step ${i + 1}/${steps.length}: ${stepType}`);
       
       try {
         const result = await executeStep(step, job);
         results.push({
           stepIndex: i,
-          type: step.type,
+          type: stepType,
           status: "success",
           result,
         });
@@ -60,11 +60,11 @@ const workflowWorker = new Worker(
         job.log(`Step ${i + 1} failed: ${error.message}`);
         results.push({
           stepIndex: i,
-          type: step.type,
+          type: stepType,
           status: "failed",
           error: error.message,
         });
-        throw new Error(`Step ${i + 1} (${step.type}) failed: ${error.message}`);
+        throw new Error(`Step ${i + 1} (${stepType}) failed: ${error.message}`);
       }
     }
     
@@ -95,12 +95,15 @@ const workflowWorker = new Worker(
       steps: results,
       attemptsMade: job.attemptsMade,
     };
-  },
-  {
+  };
+
+const workflowWorker = process.env.NODE_ENV === 'test' 
+  ? { on: () => {} }
+  : new Worker("workflows", workflowWorkerProcessor, {
     connection: redisConnection,
     concurrency: 5,
-  }
-);
+  });
+
 
 // Handle failed jobs - move to DLQ
 workflowWorker.on("failed", async (job, error) => {
@@ -146,13 +149,14 @@ workflowWorker.on("completed", (job) => {
 });
 
 async function executeStep(step, job) {
-  switch (step.type) {
+  const stepType = step.step_type || step.type;
+  switch (stepType) {
     case "delay":
       return await executeDelay(step.config, job);
     case "http_request":
       return await executeHttpRequest(step.config, job);
     default:
-      throw new Error(`Unknown step type: ${step.type}`);
+      throw new Error(`Unknown step type: ${stepType}`);
   }
 }
 
@@ -175,4 +179,4 @@ async function executeHttpRequest(config, job) {
   return response.data;
 }
 
-module.exports = workflowWorker;
+module.exports = { workflowWorker, workflowWorkerProcessor };

@@ -1,7 +1,13 @@
 import axios from "axios";
 
+let apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Ensure the URL always ends with /api to prevent 404 errors when deployed
+if (apiUrl && !apiUrl.endsWith('/api')) {
+  apiUrl = apiUrl.replace(/\/$/, '') + '/api';
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: apiUrl,
 });
 
 // Add auth token to requests
