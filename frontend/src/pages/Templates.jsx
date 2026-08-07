@@ -80,12 +80,12 @@ const Templates = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-[#0B1120]">
       <Sidebar />
       <div className="ml-64 max-w-7xl mx-auto px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">Workflow Templates</h1>
-          <p className="text-gray-600 dark:text-gray-400">Start with pre-built workflows and customize them to your needs</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Workflow Templates</h1>
+          <p className="text-gray-400">Start with pre-built templates to automate common workflows</p>
         </div>
 
         <div className="mb-8">
@@ -96,8 +96,8 @@ const Templates = () => {
                 onClick={() => setSelectedCategory(category)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   selectedCategory === category
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                    ? "bg-[#6366F1] text-white"
+                    : "bg-[#111827] text-gray-400 hover:bg-gray-800"
                 }`}
               >
                 {category}
@@ -110,53 +110,27 @@ const Templates = () => {
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200 group"
+              className="bg-[#111827] rounded-xl shadow-sm border border-gray-800 p-6 hover:border-[#6366F1] transition-colors"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className={`w-14 h-14 ${template.color} rounded-xl flex items-center justify-center text-3xl shadow-lg`}>
-                  {template.icon}
-                </div>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    template.popularity === "High"
-                      ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
-                      : template.popularity === "Medium"
-                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300"
-                      : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
-                  }`}
-                >
-                  {template.popularity} Popularity
+                <div className="text-4xl">{template.icon}</div>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  template.popularity === "High"
+                    ? "bg-[#22C55E]/20 text-[#22C55E]"
+                    : template.popularity === "Medium"
+                    ? "bg-yellow-500/20 text-yellow-500"
+                    : "bg-[#EF4444]/20 text-[#EF4444]"
+                }`}>
+                  {template.popularity}
                 </span>
               </div>
-
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {template.name}
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
-                {template.description}
-              </p>
-
-              <div className="mb-4">
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Workflow Steps:</p>
-                <div className="space-y-2">
-                  {template.steps.map((step, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <span className={`w-6 h-6 rounded-full ${template.color} flex items-center justify-center text-xs font-bold`}>
-                        {index + 1}
-                      </span>
-                      {step}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  Category: {template.category}
-                </span>
+              <h3 className="text-lg font-semibold text-white mb-2">{template.name}</h3>
+              <p className="text-sm text-gray-400 mb-4">{template.description}</p>
+              <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                <span className="text-xs text-gray-500">{template.steps.length} steps • {template.category}</span>
                 <button
                   onClick={() => useTemplate(template.id)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-[#6366F1] hover:bg-[#5558E3] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   Use Template
                 </button>

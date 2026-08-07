@@ -5,6 +5,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
+import Workflows from "./pages/Workflows";
 import Tasks from "./pages/Tasks";
 import WorkflowCreate from "./pages/WorkflowCreate";
 import ExecutionLogs from "./pages/ExecutionLogs";
@@ -57,6 +58,10 @@ function App() {
           <Route
             path="/"
             element={user ? <Dashboard /> : <Navigate to="/login" />}
+          />
+          <Route
+            path="/workflows"
+            element={user ? <Workflows /> : <Navigate to="/login" />}
           />
           <Route
             path="/workflows/create"

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { signOut } from "../services/supabase";
 import { useTheme } from "../contexts/ThemeContext";
 
 const Sidebar = () => {
@@ -26,19 +25,19 @@ const Sidebar = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className={`fixed left-0 top-0 h-full bg-gray-900 dark:bg-black text-white transition-all duration-300 z-50 ${
+    <div className={`fixed left-0 top-0 h-full bg-[#111827] text-white transition-all duration-300 z-50 ${
       isCollapsed ? "w-16" : "w-64"
     }`}>
       <div className="flex flex-col h-full">
-        <div className="flex items-center justify-between p-4 border-b border-gray-700 dark:border-gray-800">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800">
           {!isCollapsed && (
-            <Link to="/" className="text-xl font-bold text-blue-400">
-              TaskPilot
+            <Link to="/" className="text-xl font-bold text-[#6366F1]">
+              TaskPilot 🚀
             </Link>
           )}
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-gray-800 dark:hover:bg-gray-900 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -53,8 +52,8 @@ const Sidebar = () => {
               to={item.path}
               className={`flex items-center p-3 rounded-lg transition-colors ${
                 isActive(item.path)
-                  ? "bg-blue-600 text-white"
-                  : "hover:bg-gray-800 dark:hover:bg-gray-900 text-gray-300"
+                  ? "bg-[#6366F1] text-white"
+                  : "hover:bg-gray-800 text-gray-300"
               }`}
             >
               <span className="text-xl">{item.icon}</span>
@@ -65,10 +64,25 @@ const Sidebar = () => {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-700 dark:border-gray-800 space-y-2">
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-[#0B1120] border border-gray-800">
+            <div className="w-10 h-10 rounded-full bg-[#6366F1] flex items-center justify-center text-white font-semibold">
+              {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email?.charAt(0).toUpperCase() : "U"}
+            </div>
+            {!isCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email?.split("@")[0] : "User"}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {localStorage.getItem("user") ? JSON.parse(localStorage.getItem("user")).email : "user@example.com"}
+                </p>
+              </div>
+            )}
+          </div>
           <button
             onClick={toggleTheme}
-            className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-900 transition-colors text-gray-300"
+            className="flex items-center w-full p-3 rounded-lg hover:bg-gray-800 transition-colors text-gray-300"
           >
             {isDark ? (
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +97,7 @@ const Sidebar = () => {
           </button>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full p-3 rounded-lg hover:bg-red-600 transition-colors text-gray-300 hover:text-white"
+            className="flex items-center w-full p-3 rounded-lg hover:bg-red-600/20 hover:text-red-400 transition-colors text-gray-300"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />

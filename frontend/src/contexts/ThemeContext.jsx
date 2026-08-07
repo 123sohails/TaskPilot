@@ -13,15 +13,18 @@ export const useTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [isDark, setIsDark] = useState(() => {
     const saved = localStorage.getItem("theme");
-    return saved === "dark" || (!saved && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    // Default to dark mode
+    return saved !== "light";
   });
 
   useEffect(() => {
     localStorage.setItem("theme", isDark ? "dark" : "light");
     if (isDark) {
+      document.documentElement.classList.remove("light");
       document.documentElement.classList.add("dark");
     } else {
       document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
     }
   }, [isDark]);
 

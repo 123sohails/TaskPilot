@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { workflowAPI } from "../services/api";
 import Sidebar from "../components/Sidebar";
+import WorkflowBuilder from "../components/WorkflowBuilder";
 
 const WorkflowCreate = () => {
   const [formData, setFormData] = useState({
@@ -72,16 +73,17 @@ const WorkflowCreate = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0B1120]">
       <Sidebar />
       <div className="ml-64 max-w-4xl mx-auto px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Create Workflow</h1>
-          <p className="text-gray-600">Design a new automation workflow to streamline your tasks</p>
-        </div>
+        <div className="bg-[#111827] rounded-xl shadow-sm border border-gray-800 p-8">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-white mb-2">Create Workflow</h1>
+            <p className="text-gray-400">Design a new automation workflow to streamline your tasks</p>
+          </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center">
+          <div className="bg-red-900/20 border border-red-800 text-red-400 px-4 py-3 rounded-lg mb-6 flex items-center">
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
@@ -89,12 +91,12 @@ const WorkflowCreate = () => {
           </div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-[#111827] rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-8">
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-400 mb-2"
               >
                 Workflow Name
               </label>
@@ -104,22 +106,22 @@ const WorkflowCreate = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all ${
                   errors.name
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    ? "border-red-700 focus:ring-red-500 bg-[#0B1120] text-white"
+                    : "border-gray-700 focus:ring-[#6366F1] bg-[#0B1120] text-white"
                 }`}
                 placeholder="e.g., GitHub Issue to Notion"
               />
               {errors.name && (
-                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                <p className="mt-1.5 text-sm text-red-400">{errors.name}</p>
               )}
             </div>
 
             <div>
               <label
                 htmlFor="description"
-                className="block text-sm font-semibold text-gray-700 mb-2"
+                className="block text-sm font-medium text-gray-400 mb-2"
               >
                 Description
               </label>
@@ -129,15 +131,15 @@ const WorkflowCreate = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 transition-colors resize-none ${
+                className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none ${
                   errors.description
-                    ? "border-red-300 focus:ring-red-500 focus:border-red-500"
-                    : "border-gray-300 focus:ring-blue-500 focus:border-blue-500"
+                    ? "border-red-700 focus:ring-red-500 bg-[#0B1120] text-white"
+                    : "border-gray-700 focus:ring-[#6366F1] bg-[#0B1120] text-white"
                 }`}
                 placeholder="Describe what this workflow does and what it automates"
               />
               {errors.description && (
-                <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+                <p className="mt-1.5 text-sm text-red-400">{errors.description}</p>
               )}
               <p className="mt-1 text-sm text-gray-500">{formData.description.length}/500 characters</p>
             </div>
@@ -145,7 +147,7 @@ const WorkflowCreate = () => {
             <div>
               <label
                 htmlFor="trigger_type"
-                className="block text-sm font-semibold text-gray-700 mb-4"
+                className="block text-sm font-medium text-gray-400 mb-4"
               >
                 Trigger Type
               </label>
@@ -153,10 +155,10 @@ const WorkflowCreate = () => {
                 {triggerOptions.map((option) => (
                   <label
                     key={option.value}
-                    className={`relative cursor-pointer rounded-lg border-2 p-4 transition-all ${
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
                       formData.trigger_type === option.value
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
+                        ? "border-[#6366F1] bg-[#6366F1]/10"
+                        : "border-gray-800 hover:border-gray-700 bg-[#0B1120]"
                     }`}
                   >
                     <input
@@ -170,13 +172,13 @@ const WorkflowCreate = () => {
                     <div className="flex items-start">
                       <span className="text-2xl mr-3">{option.icon}</span>
                       <div>
-                        <p className="font-medium text-gray-900">{option.label}</p>
-                        <p className="text-sm text-gray-500 mt-1">{option.description}</p>
+                        <h3 className="font-semibold text-white">{option.label}</h3>
+                        <p className="text-sm text-gray-400 mt-1">{option.description}</p>
                       </div>
                     </div>
                     {formData.trigger_type === option.value && (
                       <div className="absolute top-4 right-4">
-                        <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-5 h-5 text-[#6366F1]" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       </div>
@@ -186,11 +188,21 @@ const WorkflowCreate = () => {
               </div>
             </div>
 
+            <div>
+              <label
+                htmlFor="workflow_builder"
+                className="block text-sm font-medium text-gray-400 mb-4"
+              >
+                Workflow Builder
+              </label>
+              <WorkflowBuilder />
+            </div>
+
             <div className="flex space-x-4 pt-4">
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                className="px-8 py-3 bg-[#6366F1] hover:bg-[#5558E3] text-white rounded-xl font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl flex items-center gap-2"
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -207,7 +219,7 @@ const WorkflowCreate = () => {
               <button
                 type="button"
                 onClick={() => navigate("/")}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors"
+                className="px-6 py-3 border border-gray-700 rounded-xl text-gray-400 font-medium hover:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>
