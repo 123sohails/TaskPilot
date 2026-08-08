@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const { Worker } = require("bullmq");
 const { redisConnection, deadLetterQueue } = require("../queues/task.queue");
 const idempotencyService = require("../services/idempotency.service");
@@ -10,6 +12,7 @@ const gmailService = require("../integrations/gmail/gmail.service");
 const notionService = require("../integrations/notion/notion.service");
 
 const workflowWorkerProcessor = async (job) => {
+    console.log(`Worker received job: ${job.id} for workflow: ${job.data.workflowId}`);
     const { workflowId, triggerEvent, idempotencyKey, steps, executionId } = job.data;
     
     job.log(`Starting workflow execution: ${workflowId}`);
@@ -109,6 +112,22 @@ const workflowWorker = process.env.NODE_ENV === 'test'
     connection: redisConnection,
     concurrency: 5,
   });
+
+if (process.env.NODE_ENV !== 'test') {
+  console.log("Workflow worker initialized, waiting for jobs...");
+  workflowWorker.on("ready", () => {
+    console.log("Worker is ready and connected to Redis");
+  });
+  workflowWorker.on("error", (error) => {
+    console.error("Worker error:", error);
+  });
+  workflowWorker.on("active", (job) => {
+    console.log(`Worker picked up job: ${job.id}`);
+  });
+  workflowWorker.on("completed", (job) => {
+    console.log(`Worker completed job: ${job.id}`);
+  });
+}
 
 
 // Handle failed jobs - move to DLQ

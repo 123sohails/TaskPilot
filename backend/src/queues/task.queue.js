@@ -48,6 +48,14 @@ if (process.env.NODE_ENV === 'test') {
     },
   });
 
+  workflowQueue.on("waiting", (job) => {
+    console.log(`Job ${job.id} is waiting in queue`);
+  });
+  
+  workflowQueue.on("active", (job) => {
+    console.log(`Job ${job.id} is now active`);
+  });
+
   // Dead Letter Queue (DLQ)
   // Queue names MUST NOT contain ":" in BullMQ
   deadLetterQueue = new Queue("workflows-dead-letter", {

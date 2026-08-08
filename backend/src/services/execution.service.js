@@ -79,6 +79,8 @@ async function runWorkflow(workflowId, userId, triggerData = {}) {
       }
     );
 
+    console.log(`Job added to queue: ${job.id} for workflow ${workflowId}`);
+
     const { data: queuedExecution, error: queueUpdateError } = await supabase
       .from("executions")
       .update({
