@@ -9,3 +9,7 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`🚀 TaskPilot Backend running on port ${PORT}`);
 });
+
+// Start the workflow worker in the same process for production
+console.log("Starting workflow worker...");
+require("./workers/task.worker");
