@@ -3,6 +3,12 @@ const { redisConnection, deadLetterQueue } = require("../queues/task.queue");
 const idempotencyService = require("../services/idempotency.service");
 const executionService = require("../services/execution.service");
 
+// Import integrations
+const aiService = require("../services/ai.service");
+const githubService = require("../integrations/github/github.service");
+const gmailService = require("../integrations/gmail/gmail.service");
+const notionService = require("../integrations/notion/notion.service");
+
 const workflowWorkerProcessor = async (job) => {
     const { workflowId, triggerEvent, idempotencyKey, steps, executionId } = job.data;
     
@@ -155,6 +161,18 @@ async function executeStep(step, job) {
       return await executeDelay(step.config, job);
     case "http_request":
       return await executeHttpRequest(step.config, job);
+    case "ai_summarize":
+      job.log(`Running AI Summarize on provided text`);
+      return { summary: await aiService.analyzeText(step.config?.text || "", "general") };
+    case "github_create_issue":
+      job.log(`Creating GitHub Issue in ${step.config?.owner}/${step.config?.repo}`);
+      return await githubService.createIssue(step.config, {});
+    case "gmail_send":
+      job.log(`Sending Email to ${step.config?.to}`);
+      return await gmailService.sendEmail(step.config, {});
+    case "notion_create_page":
+      job.log(`Creating Notion Page in DB ${step.config?.databaseId}`);
+      return await notionService.createPage(step.config, {});
     default:
       throw new Error(`Unknown step type: ${stepType}`);
   }
