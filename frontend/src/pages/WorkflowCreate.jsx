@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { workflowAPI } from "../services/api";
+import { workflowAPI, workflowStepAPI } from "../services/api";
 import WorkflowBuilder from "../components/WorkflowBuilder";
+import { useNodesState, useEdgesState } from 'reactflow';
 
 const WorkflowCreate = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,36 @@ const WorkflowCreate = () => {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const [nodes, setNodes, onNodesChange] = useNodesState([
+    {
+      id: '1',
+      type: 'input',
+      data: { 
+        step_type: 'trigger',
+        label: (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>Trigger</span>
+            <span style={{ padding: '2px 8px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', fontSize: '10px', borderRadius: '999px' }}>Event</span>
+          </div>
+        )
+      },
+      position: { x: 250, y: 0 },
+      style: {
+        background: '#4f46e5',
+        color: '#fff',
+        border: 'none',
+        borderRadius: '8px',
+        padding: '12px 20px',
+        fontSize: '14px',
+        fontWeight: '600',
+        width: 200,
+        boxShadow: '0 4px 12px rgba(79, 70, 229, 0.4)'
+      },
+    }
+  ]);
+
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -37,7 +68,21 @@ const WorkflowCreate = () => {
 
     setLoading(true);
     try {
-      await workflowAPI.create(formData);
+      const response = await workflowAPI.create(formData);
+      const workflowId = response.data.id;
+      
+      // Save all action steps (ignoring the visual trigger node)
+      const actionNodes = nodes.filter(n => n.data?.step_type !== 'trigger');
+      
+      for (let i = 0; i < actionNodes.length; i++) {
+        const node = actionNodes[i];
+        await workflowStepAPI.add(workflowId, {
+          step_order: i + 1,
+          step_type: node.data?.step_type || 'http_request',
+          config: node.data?.config || {}
+        });
+      }
+
       setLoading(false);
       setSuccess(true);
       setTimeout(() => {
@@ -158,7 +203,14 @@ const WorkflowCreate = () => {
             <label style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-secondary)' }}>
               Workflow Builder
             </label>
-            <WorkflowBuilder />
+            <WorkflowBuilder 
+              nodes={nodes}
+              setNodes={setNodes}
+              onNodesChange={onNodesChange}
+              edges={edges}
+              setEdges={setEdges}
+              onEdgesChange={onEdgesChange}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: '16px', marginTop: '16px', borderTop: '1px solid var(--border-color)', paddingTop: '24px' }}>

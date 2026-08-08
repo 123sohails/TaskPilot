@@ -10,105 +10,8 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 
-const WorkflowBuilder = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([
-    {
-      id: '1',
-      type: 'input',
-      data: { 
-        label: (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>Trigger</span>
-            <span style={{ padding: '2px 8px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', fontSize: '10px', borderRadius: '999px' }}>Webhook</span>
-          </div>
-        )
-      },
-      position: { x: 250, y: 0 },
-      style: {
-        background: '#4f46e5',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '8px',
-        padding: '12px 20px',
-        fontSize: '14px',
-        fontWeight: '600',
-        width: 200,
-        boxShadow: '0 4px 12px rgba(79, 70, 229, 0.4)'
-      },
-    },
-    {
-      id: '2',
-      data: { 
-        label: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>HTTP Request</span>
-            <span style={{ fontSize: '10px', color: '#9ca3af' }}>Retry: 3x • Backoff: 1s</span>
-          </div>
-        )
-      },
-      position: { x: 250, y: 100 },
-      style: {
-        background: '#1f2937',
-        color: '#fff',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '8px',
-        padding: '12px 20px',
-        fontSize: '14px',
-        width: 200,
-      },
-    },
-    {
-      id: '3',
-      data: { 
-        label: (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>Process Data</span>
-            <span style={{ fontSize: '10px', color: '#34d399' }}>Idempotent ✓</span>
-          </div>
-        )
-      },
-      position: { x: 250, y: 200 },
-      style: {
-        background: '#1f2937',
-        color: '#fff',
-        border: '1px solid rgba(255,255,255,0.1)',
-        borderRadius: '8px',
-        padding: '12px 20px',
-        fontSize: '14px',
-        width: 200,
-      },
-    },
-    {
-      id: '4',
-      type: 'output',
-      data: { 
-        label: (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>Webhook</span>
-            <span style={{ padding: '2px 8px', background: 'rgba(16, 185, 129, 0.2)', color: '#6ee7b7', fontSize: '10px', borderRadius: '999px' }}>POST</span>
-          </div>
-        )
-      },
-      position: { x: 250, y: 300 },
-      style: {
-        background: '#059669',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '8px',
-        padding: '12px 20px',
-        fontSize: '14px',
-        fontWeight: '600',
-        width: 200,
-        boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)'
-      },
-    },
-  ]);
+const WorkflowBuilder = ({ nodes, setNodes, onNodesChange, edges, setEdges, onEdgesChange }) => {
 
-  const [edges, setEdges, onEdgesChange] = useEdgesState([
-    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: '#818cf8', strokeWidth: 2 }, label: 'Queue: jobs', labelStyle: { fill: '#9CA3AF', fontSize: 10 } },
-    { id: 'e2-3', source: '2', target: '3', animated: true, style: { stroke: '#818cf8', strokeWidth: 2 }, label: 'Queue: process', labelStyle: { fill: '#9CA3AF', fontSize: 10 } },
-    { id: 'e3-4', source: '3', target: '4', animated: true, style: { stroke: '#818cf8', strokeWidth: 2 }, label: 'Queue: webhook', labelStyle: { fill: '#9CA3AF', fontSize: 10 } },
-  ]);
 
   const [showConfig, setShowConfig] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -121,17 +24,33 @@ const WorkflowBuilder = () => {
   }, []);
 
   const addNode = () => {
+    const newId = `${nodes.length + 1}`;
+    
+    // Add edge linking to previous node if it exists
+    if (nodes.length > 0) {
+      const prevId = nodes[nodes.length - 1].id;
+      setEdges((eds) => [...eds, { 
+        id: `e${prevId}-${newId}`, 
+        source: prevId, 
+        target: newId, 
+        animated: true, 
+        style: { stroke: '#818cf8', strokeWidth: 2 } 
+      }]);
+    }
+
     const newNode = {
-      id: `${nodes.length + 1}`,
+      id: newId,
       data: { 
+        step_type: 'http_request',
+        config: { url: '', method: 'GET' },
         label: (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span>New Step</span>
-            <span style={{ fontSize: '10px', color: '#9ca3af' }}>Queue: default</span>
+            <span>HTTP Request</span>
+            <span style={{ fontSize: '10px', color: '#9ca3af' }}>Configure url and method</span>
           </div>
         )
       },
-      position: { x: 250, y: nodes.length * 100 + 100 },
+      position: { x: 250, y: nodes.length * 100 },
       style: {
         background: '#1f2937',
         color: '#fff',
@@ -143,6 +62,28 @@ const WorkflowBuilder = () => {
       },
     };
     setNodes((nds) => [...nds, newNode]);
+  };
+
+  const updateNodeConfig = (key, value) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === selectedNode.id) {
+          const updatedNode = {
+            ...node,
+            data: {
+              ...node.data,
+              config: {
+                ...node.data.config,
+                [key]: value
+              }
+            }
+          };
+          setSelectedNode(updatedNode); // keep local state in sync
+          return updatedNode;
+        }
+        return node;
+      })
+    );
   };
 
   return (
@@ -172,7 +113,7 @@ const WorkflowBuilder = () => {
       </ReactFlow>
       
       {/* Configuration Panel overlay */}
-      {showConfig && selectedNode && (
+      {showConfig && selectedNode && selectedNode.data.step_type !== 'trigger' && (
         <div style={{
           position: 'absolute',
           top: '16px',
@@ -187,25 +128,35 @@ const WorkflowBuilder = () => {
           overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h4 style={{ fontSize: '16px', fontWeight: 600 }}>Node Configuration</h4>
+            <h4 style={{ fontSize: '16px', fontWeight: 600 }}>Configure HTTP Request</h4>
             <button onClick={() => setShowConfig(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '20px' }}>×</button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div className="flex-col gap-2">
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Queue Name</label>
-              <input type="text" className="input-field" defaultValue="default" />
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Method</label>
+              <select 
+                className="input-field" 
+                value={selectedNode.data.config?.method || 'GET'}
+                onChange={(e) => updateNodeConfig('method', e.target.value)}
+              >
+                <option value="GET">GET</option>
+                <option value="POST">POST</option>
+                <option value="PUT">PUT</option>
+                <option value="DELETE">DELETE</option>
+              </select>
             </div>
             
             <div className="flex-col gap-2">
-              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Retry Policy</label>
-              <input type="number" className="input-field" defaultValue={3} />
+              <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>URL</label>
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="https://api.example.com/data" 
+                value={selectedNode.data.config?.url || ''}
+                onChange={(e) => updateNodeConfig('url', e.target.value)}
+              />
             </div>
-            
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-primary)', cursor: 'pointer' }}>
-              <input type="checkbox" defaultChecked />
-              Enable Dead Letter Queue
-            </label>
           </div>
         </div>
       )}
