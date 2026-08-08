@@ -96,10 +96,11 @@ const WorkflowCreate = () => {
 
   const triggerOptions = [
     { value: "manual", label: "Manual Trigger", icon: "⚡", description: "Trigger manually from the dashboard" },
-    { value: "github_issue_created", label: "GitHub Issue Created", icon: "🐛", description: "Trigger when a new issue is created" },
-    { value: "github_pr_opened", label: "GitHub PR Opened", icon: "🔀", description: "Trigger when a pull request is opened" },
-    { value: "gmail_received", label: "Gmail Received", icon: "📧", description: "Trigger when receiving new emails" },
-    { value: "notion_updated", label: "Notion Page Updated", icon: "📝", description: "Trigger when a Notion page is updated" },
+    { value: "github_issue_created", label: "GitHub Issue Created", icon: "🐛", description: "Trigger when a new issue is created", webhook: true },
+    { value: "github_pr_opened", label: "GitHub PR Opened", icon: "🔀", description: "Trigger when a pull request is opened", webhook: true },
+    { value: "github_push", label: "GitHub Push", icon: "📤", description: "Trigger when code is pushed", webhook: true },
+    { value: "gmail_received", label: "Gmail Received", icon: "📧", description: "Trigger when receiving new emails", webhook: true },
+    { value: "notion_updated", label: "Notion Page Updated", icon: "📝", description: "Trigger when a Notion page is updated", webhook: true },
   ];
 
   return (
@@ -190,6 +191,11 @@ const WorkflowCreate = () => {
                   <div>
                     <h3 style={{ fontSize: '16px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>{option.label}</h3>
                     <p style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>{option.description}</p>
+                    {option.webhook && (
+                      <span style={{ display: 'inline-block', marginTop: '8px', padding: '2px 8px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', fontSize: '10px', borderRadius: '999px' }}>
+                        Webhook
+                      </span>
+                    )}
                   </div>
                   {formData.trigger_type === option.value && (
                     <div style={{ position: 'absolute', top: '16px', right: '16px', color: 'var(--accent-primary)' }}>✅</div>
@@ -197,6 +203,37 @@ const WorkflowCreate = () => {
                 </label>
               ))}
             </div>
+            
+            {/* Webhook Configuration Info */}
+            {formData.trigger_type.startsWith('github_') && (
+              <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--accent-primary)' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>📡 GitHub Webhook Setup</h4>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Configure this webhook in your GitHub repository settings:
+                </p>
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '12px', borderRadius: 'var(--border-radius-sm)', fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>
+                  <div style={{ color: 'var(--accent-primary)', marginBottom: '4px' }}>Webhook URL:</div>
+                  <div style={{ color: 'var(--text-tertiary)' }}>{window.location.origin}/webhooks/github</div>
+                  <div style={{ color: 'var(--accent-primary)', marginTop: '8px', marginBottom: '4px' }}>Events:</div>
+                  <div style={{ color: 'var(--text-tertiary)' }}>{formData.trigger_type.replace('github_', '').replace('_', ' ')}</div>
+                </div>
+              </div>
+            )}
+
+            {formData.trigger_type === 'gmail_received' && (
+              <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: 'var(--border-radius-md)', border: '1px solid var(--accent-primary)' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>📧 Gmail Webhook Setup</h4>
+                <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+                  Configure Gmail webhooks via Google Cloud Pub/Sub:
+                </p>
+                <div style={{ background: 'rgba(0, 0, 0, 0.3)', padding: '12px', borderRadius: 'var(--border-radius-sm)', fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>
+                  <div style={{ color: 'var(--accent-primary)', marginBottom: '4px' }}>Webhook URL:</div>
+                  <div style={{ color: 'var(--text-tertiary)' }}>{window.location.origin}/webhooks/gmail</div>
+                  <div style={{ color: 'var(--accent-primary)', marginTop: '8px', marginBottom: '4px' }}>Setup Required:</div>
+                  <div style={{ color: 'var(--text-tertiary)' }}>Google Cloud Pub/Sub subscription</div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex-col gap-4">

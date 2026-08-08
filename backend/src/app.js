@@ -5,6 +5,7 @@ const workflowRoutes = require("./routes/workflow.routes");
 const workflowStepRoutes = require("./routes/workflowStep.routes");
 const executionRoutes = require("./routes/execution.routes");
 const metricsRoutes = require("./routes/metrics.routes");
+const webhookRoutes = require("./routes/webhook.routes");
 const { errorHandler, notFoundHandler } = require("./middleware/error.middleware");
 
 const app = express();
@@ -24,6 +25,7 @@ app.use("/api/workflows", workflowStepRoutes);
 app.use("/api/executions", executionRoutes);
 app.use("/metrics", metricsRoutes);
 app.use("/api/metrics", metricsRoutes);
+app.use("/webhooks", webhookRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
