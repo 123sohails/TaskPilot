@@ -108,7 +108,7 @@ async function callAI(prompt) {
     const response = await axios.post(
       GROQ_API_URL,
       {
-        model: "llama3-70b-8192",
+        model: "llama-3.1-70b-versatile",
         messages: [
           {
             role: "system",
