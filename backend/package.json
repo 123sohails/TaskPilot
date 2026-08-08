@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "worker": "node src/workers/task.worker.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\"",
     "test": "node --test"
   },
   "keywords": [],
@@ -25,6 +27,7 @@
     "ioredis": "^6.0.0"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "nodemon": "^3.1.14"
   }
 }
