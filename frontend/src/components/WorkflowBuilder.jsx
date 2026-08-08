@@ -129,7 +129,7 @@ const WorkflowBuilder = ({ nodes, setNodes, onNodesChange, edges, setEdges, onEd
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h4 style={{ fontSize: '16px', fontWeight: 600 }}>Configure HTTP Request</h4>
-            <button onClick={() => setShowConfig(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '20px' }}>×</button>
+            <button type="button" onClick={() => setShowConfig(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '20px' }}>×</button>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -162,7 +162,7 @@ const WorkflowBuilder = ({ nodes, setNodes, onNodesChange, edges, setEdges, onEd
       )}
 
       <div style={{ position: 'absolute', bottom: '16px', right: '16px', display: 'flex', gap: '12px' }}>
-        <button onClick={addNode} className="btn-secondary">
+        <button type="button" onClick={addNode} className="btn-secondary">
           ➕ Add Step
         </button>
       </div>
