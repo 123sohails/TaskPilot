@@ -1,6 +1,7 @@
 const crypto = require("crypto");
 const executionService = require("../services/execution.service");
 const supabase = require("../config/supabase");
+const aiService = require("../services/ai.service");
 
 /**
  * Verify GitHub webhook signature
@@ -12,7 +13,7 @@ function verifyGitHubSignature(payload, signature, secret) {
 }
 
 /**
- * Handle GitHub webhook
+ * Handle GitHub webhook with AI integration
  */
 async function handleGitHubWebhook(req, res) {
   try {
@@ -42,32 +43,70 @@ async function handleGitHubWebhook(req, res) {
 
     console.log(`GitHub webhook received: ${githubEvent} (${deliveryId})`);
 
-    // Find workflows with GitHub trigger matching this event
-    const { data: workflows, error } = await supabase
+    // Get all active workflows for AI to analyze
+    const { data: allWorkflows, error: workflowsError } = await supabase
       .from("workflows")
       .select("*")
-      .eq("trigger_type", `github_${githubEvent}`)
       .eq("status", "active");
 
-    if (error) {
-      console.error("Failed to fetch workflows:", error.message);
+    if (workflowsError) {
+      console.error("Failed to fetch workflows:", workflowsError.message);
       return res.status(500).json({ error: "Failed to process webhook" });
     }
 
-    if (!workflows || workflows.length === 0) {
-      console.log(`No active workflows found for event: ${githubEvent}`);
-      return res.status(200).json({ message: "No matching workflows" });
+    // AI analyzes the GitHub event
+    let aiAnalysis = null;
+    let suggestedWorkflowId = null;
+    
+    try {
+      console.log("AI analyzing GitHub event...");
+      aiAnalysis = await aiService.analyzeGitHubEvent(req.body);
+      console.log("AI Analysis:", aiAnalysis);
+      
+      // AI suggests the best workflow
+      if (allWorkflows && allWorkflows.length > 0) {
+        suggestedWorkflowId = await aiService.suggestGitHubWorkflow(aiAnalysis, allWorkflows);
+        console.log("AI Suggested Workflow:", suggestedWorkflowId);
+      }
+    } catch (aiError) {
+      console.warn("AI analysis failed, falling back to manual matching:", aiError.message);
     }
 
-    // Trigger each matching workflow
+    // Use AI suggestion if available, otherwise fall back to manual matching
+    let workflowsToTrigger = [];
+    
+    if (suggestedWorkflowId) {
+      const suggestedWorkflow = allWorkflows.find(w => w.id === suggestedWorkflowId);
+      if (suggestedWorkflow) {
+        workflowsToTrigger = [suggestedWorkflow];
+        console.log(`Using AI-suggested workflow: ${suggestedWorkflow.name}`);
+      }
+    }
+    
+    // Fallback to manual trigger type matching
+    if (workflowsToTrigger.length === 0) {
+      workflowsToTrigger = allWorkflows.filter(w => w.trigger_type === `github_${githubEvent}`);
+      console.log(`Fallback: Found ${workflowsToTrigger.length} workflows with manual trigger matching`);
+    }
+
+    if (workflowsToTrigger.length === 0) {
+      console.log(`No workflows triggered for event: ${githubEvent}`);
+      return res.status(200).json({ 
+        message: "No matching workflows",
+        aiAnalysis: aiAnalysis || "AI analysis failed"
+      });
+    }
+
+    // Trigger each workflow with AI-enriched data
     const results = [];
-    for (const workflow of workflows) {
+    for (const workflow of workflowsToTrigger) {
       try {
         const triggerData = {
           source: "github_webhook",
           event: githubEvent,
           deliveryId,
           payload: req.body,
+          aiAnalysis: aiAnalysis || null,
         };
 
         const execution = await executionService.runWorkflow(
@@ -81,6 +120,7 @@ async function handleGitHubWebhook(req, res) {
           workflowName: workflow.name,
           executionId: execution.execution.id,
           status: "triggered",
+          aiSuggested: workflow.id === suggestedWorkflowId,
         });
 
         console.log(`Triggered workflow ${workflow.name} (${workflow.id})`);
@@ -99,6 +139,7 @@ async function handleGitHubWebhook(req, res) {
       message: "Webhook processed",
       event: githubEvent,
       workflowsTriggered: results.length,
+      aiAnalysis: aiAnalysis || "AI analysis disabled",
       results,
     });
   } catch (error) {
@@ -108,7 +149,7 @@ async function handleGitHubWebhook(req, res) {
 }
 
 /**
- * Handle Gmail webhook (via Pub/Sub push)
+ * Handle Gmail webhook with AI integration (via Pub/Sub push)
  */
 async function handleGmailWebhook(req, res) {
   try {
@@ -124,31 +165,76 @@ async function handleGmailWebhook(req, res) {
 
     console.log(`Gmail webhook received: ${emailData.emailAddress}`);
 
-    // Find workflows with Gmail trigger
-    const { data: workflows, error } = await supabase
+    // Get all active workflows for AI to analyze
+    const { data: allWorkflows, error: workflowsError } = await supabase
       .from("workflows")
       .select("*")
-      .eq("trigger_type", "gmail_received")
       .eq("status", "active");
 
-    if (error) {
-      console.error("Failed to fetch workflows:", error.message);
+    if (workflowsError) {
+      console.error("Failed to fetch workflows:", workflowsError.message);
       return res.status(500).json({ error: "Failed to process webhook" });
     }
 
-    if (!workflows || workflows.length === 0) {
-      console.log("No active workflows found for gmail_received event");
-      return res.status(200).json({ message: "No matching workflows" });
+    // AI analyzes the email
+    let aiClassification = null;
+    let actionItems = null;
+    let suggestedWorkflowId = null;
+    
+    try {
+      console.log("AI classifying email...");
+      aiClassification = await aiService.classifyGmailEmail(emailData);
+      console.log("AI Classification:", aiClassification);
+      
+      // AI extracts action items
+      console.log("AI extracting action items...");
+      actionItems = await aiService.extractActionItems(emailData);
+      console.log("AI Action Items:", actionItems);
+      
+      // AI suggests the best workflow
+      if (allWorkflows && allWorkflows.length > 0) {
+        suggestedWorkflowId = await aiService.suggestEmailWorkflow(aiClassification, actionItems, allWorkflows);
+        console.log("AI Suggested Workflow:", suggestedWorkflowId);
+      }
+    } catch (aiError) {
+      console.warn("AI analysis failed, falling back to manual matching:", aiError.message);
     }
 
-    // Trigger each matching workflow
+    // Use AI suggestion if available, otherwise fall back to manual matching
+    let workflowsToTrigger = [];
+    
+    if (suggestedWorkflowId) {
+      const suggestedWorkflow = allWorkflows.find(w => w.id === suggestedWorkflowId);
+      if (suggestedWorkflow) {
+        workflowsToTrigger = [suggestedWorkflow];
+        console.log(`Using AI-suggested workflow: ${suggestedWorkflow.name}`);
+      }
+    }
+    
+    // Fallback to manual trigger type matching
+    if (workflowsToTrigger.length === 0) {
+      workflowsToTrigger = allWorkflows.filter(w => w.trigger_type === "gmail_received");
+      console.log(`Fallback: Found ${workflowsToTrigger.length} workflows with manual trigger matching`);
+    }
+
+    if (workflowsToTrigger.length === 0) {
+      console.log("No workflows triggered for email_received event");
+      return res.status(200).json({ 
+        message: "No matching workflows",
+        aiClassification: aiClassification || "AI classification failed"
+      });
+    }
+
+    // Trigger each workflow with AI-enriched data
     const results = [];
-    for (const workflow of workflows) {
+    for (const workflow of workflowsToTrigger) {
       try {
         const triggerData = {
           source: "gmail_webhook",
           event: "email_received",
           payload: emailData,
+          aiClassification: aiClassification || null,
+          actionItems: actionItems || null,
         };
 
         const execution = await executionService.runWorkflow(
@@ -162,6 +248,7 @@ async function handleGmailWebhook(req, res) {
           workflowName: workflow.name,
           executionId: execution.execution.id,
           status: "triggered",
+          aiSuggested: workflow.id === suggestedWorkflowId,
         });
 
         console.log(`Triggered workflow ${workflow.name} (${workflow.id})`);
@@ -178,7 +265,9 @@ async function handleGmailWebhook(req, res) {
 
     res.status(200).json({
       message: "Webhook processed",
+      event: "email_received",
       workflowsTriggered: results.length,
+      aiClassification: aiClassification || "AI classification disabled",
       results,
     });
   } catch (error) {
